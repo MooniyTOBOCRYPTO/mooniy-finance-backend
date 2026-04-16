@@ -18,17 +18,25 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
-    const response = await axios.post('https://api.mercadolibre.com/oauth/token', {
-      grant_type: 'authorization_code',
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      code: code,
-      redirect_uri: REDIRECT_URI
-    });
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+    params.append('code', code);
+    params.append('redirect_uri', REDIRECT_URI);
+
+    const response = await axios.post(
+      'https://api.mercadolibre.com/oauth/token',
+      params,
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' } }
+    );
 
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message,
+      details: error.response?.data || null
+    });
   }
 });
 
