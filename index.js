@@ -10,7 +10,7 @@ const CLIENT_ID = process.env.ML_CLIENT_ID;
 const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 const REDIRECT_URI = process.env.ML_REDIRECT_URI;
 
-app.get('/callback', async (req, res) => {
+app.get('/callback',  async (req, res) => {
   const { code } = req.query;
   if (!code) return res.status(400).json({ error: 'No code provided' });
 
