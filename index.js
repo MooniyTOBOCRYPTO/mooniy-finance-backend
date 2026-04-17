@@ -3,7 +3,7 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const CLIENT_ID = process.env.ML_CLIENT_ID;
@@ -13,10 +13,7 @@ const DASHBOARD_URL = 'https://mooniytobocrypto.github.io/mooniy-dashboard';
 
 app.get('/callback', async (req, res) => {
   const { code } = req.query;
-  
-  if (!code) {
-    return res.status(400).json({ error: 'No code provided' });
-  }
+  if (!code) return res.status(400).json({ error: 'No code provided' });
 
   try {
     const params = new URLSearchParams();
@@ -33,12 +30,13 @@ app.get('/callback', async (req, res) => {
     );
 
     const { access_token, user_id } = response.data;
-    res.redirect(`${DASHBOARD_URL}?token=${access_token}&user_id=${user_id}`);
+    const redirectUrl = `${DASHBOARD_URL}?token=${access_token}&user_id=${user_id}`;
+    
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.redirect(301, redirectUrl);
   } catch (error) {
-    res.status(500).json({ 
-      error: error.message,
-      details: error.response?.data || null
-    });
+    res.status(500).json({ error: error.message, details: error.response?.data || null });
   }
 });
 
@@ -47,6 +45,4 @@ app.get('/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
