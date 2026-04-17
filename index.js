@@ -10,10 +10,10 @@ const CLIENT_ID = process.env.ML_CLIENT_ID;
 const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 const REDIRECT_URI = process.env.ML_REDIRECT_URI;
 
-app.get('/callback',  async (req, res) => {
+// OAuth callback
+app.get('/callback', async (req, res) => {
   const { code } = req.query;
   if (!code) return res.status(400).json({ error: 'No code provided' });
-
   try {
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');
@@ -21,16 +21,28 @@ app.get('/callback',  async (req, res) => {
     params.append('client_secret', CLIENT_SECRET);
     params.append('code', code);
     params.append('redirect_uri', REDIRECT_URI);
-
     const response = await axios.post(
       'https://api.mercadolibre.com/oauth/token',
       params,
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' } }
     );
-
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message, details: error.response?.data || null });
+  }
+});
+
+// Proxy para ML API
+app.get('/api/*', async (req, res) => {
+  const token = req.headers['authorization'];
+  const mlUrl = 'https://api.mercadolibre.com/' + req.params[0] + '?' + new URLSearchParams(req.query).toString();
+  try {
+    const response = await axios.get(mlUrl, {
+      headers: { 'Authorization': token }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
 });
 
