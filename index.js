@@ -9,7 +9,6 @@ app.use(express.json());
 const CLIENT_ID = process.env.ML_CLIENT_ID;
 const CLIENT_SECRET = process.env.ML_CLIENT_SECRET;
 const REDIRECT_URI = process.env.ML_REDIRECT_URI;
-const DASHBOARD_URL = 'https://mooniytobocrypto.github.io/mooniy-dashboard';
 
 app.get('/callback', async (req, res) => {
   const { code } = req.query;
@@ -29,12 +28,7 @@ app.get('/callback', async (req, res) => {
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' } }
     );
 
-    const { access_token, user_id } = response.data;
-    const redirectUrl = `${DASHBOARD_URL}?token=${access_token}&user_id=${user_id}`;
-    
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.redirect(301, redirectUrl);
+    res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: error.message, details: error.response?.data || null });
   }
