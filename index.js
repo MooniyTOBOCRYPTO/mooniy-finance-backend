@@ -45,6 +45,30 @@ app.get('/api/:path(*)', async (req, res) => {
   }
 });
 
+app.get('/ordenes', async (req, res) => {
+  const token = req.headers['authorization'];
+  const { seller, desde } = req.query;
+  let todasLasOrdenes = [];
+  let offset = 0;
+  const limit = 50;
+  let total = null;
+  try {
+    while (true) {
+      const url = `https://api.mercadolibre.com/orders/search?seller=${seller}&order.date_created.from=${desde}&order.status=paid&sort=date_desc&limit=${limit}&offset=${offset}`;
+      const response = await axios.get(url, { headers: { 'Authorization': token } });
+      const data = response.data;
+      if (total === null) total = data.paging?.total || 0;
+      const ordenes = data.results || [];
+      todasLasOrdenes = todasLasOrdenes.concat(ordenes);
+      offset += limit;
+      if (offset >= total || ordenes.length === 0 || offset >= 500) break;
+    }
+    res.json({ results: todasLasOrdenes, total: todasLasOrdenes.length });
+  } catch (error) {
+    res.status(500).json({ error: error.message, details: error.response?.data || null });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
